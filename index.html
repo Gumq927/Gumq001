@@ -3,832 +3,763 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>生态系统结构模拟器</title>
+    <title>生态浮床模拟实验室 | 分区随机分布 + 动态净化模拟</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         * {
             box-sizing: border-box;
+            font-family: system-ui, 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
         }
-
         body {
-            font-family: 'Segoe UI', 'Roboto', 'Noto Sans', system-ui, -apple-system, 'Microsoft YaHei', sans-serif;
-            background: linear-gradient(145deg, #e0f2e9 0%, #c8e6df 100%);
+            background: #e2f0da;
             margin: 0;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
             padding: 20px;
         }
-
-        .app-container {
+        .container {
             max-width: 1400px;
-            width: 100%;
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(2px);
-            border-radius: 56px;
-            box-shadow: 0 20px 35px rgba(0, 20, 0, 0.2);
+            margin: 0 auto;
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 20px 35px -10px rgba(0, 32, 0, 0.2);
             overflow: hidden;
+            padding: 16px 20px 24px;
         }
-
-        .panel {
-            padding: 2rem 2rem 2.5rem;
-        }
-
-        .hidden-panel {
-            display: none;
-        }
-
-        h1 {
-            font-size: 1.9rem;
-            color: #1e4a2f;
-            text-align: center;
-            margin-top: 0;
-            margin-bottom: 0.5rem;
-            font-weight: 600;
-        }
-
-        .sub {
-            text-align: center;
-            color: #2d6a4f;
-            border-bottom: 2px solid #a3d8c1;
-            display: inline-block;
-            width: auto;
-            margin: 0 auto 1.5rem;
-            padding-bottom: 6px;
-            font-weight: 500;
-        }
-
-        /* 句子卡片 */
-        .sentence-card {
-            background: #fefce6;
-            border-radius: 2rem;
-            padding: 1.2rem;
-            margin-bottom: 1.4rem;
-            box-shadow: 0 5px 12px rgba(0, 0, 0, 0.05);
-            border-left: 10px solid #2b7a4b;
-            line-height: 1.8;
-            font-size: 1.05rem;
-        }
-
-        /* 拖拽槽位 */
-        .drag-slot {
-            display: inline-block;
-            min-width: 140px;
-            background: #fff7e0;
-            border: 2px dashed #85b79a;
-            border-radius: 40px;
-            padding: 6px 16px;
-            margin: 0 6px;
-            text-align: center;
-            font-weight: bold;
-            color: #1a4f2d;
-            transition: all 0.1s ease;
-            cursor: pointer;
-            position: relative;
-        }
-        .drag-slot.filled {
-            background: #e0f0e0;
-            border: 2px solid #2b7a4b;
-        }
-        .slot-clear {
-            position: absolute;
-            right: 6px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: #d9c48b;
-            border-radius: 30px;
-            width: 22px;
-            height: 22px;
-            line-height: 20px;
-            text-align: center;
-            font-size: 14px;
-            font-weight: bold;
-            cursor: pointer;
-            color: #5a3e1b;
-            display: inline-block;
-        }
-        .slot-clear:hover {
-            background: #b68b40;
+        .header {
+            background: linear-gradient(135deg, #1f5e2c, #3e9f4a);
             color: white;
-        }
-
-        /* 可拖拽卡片列表 */
-        .drag-card-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            justify-content: center;
-            background: #f3f7ea;
-            border-radius: 48px;
-            padding: 1.2rem;
-            margin: 1.5rem 0;
-            border: 2px dashed #9bc2a3;
-        }
-        .drag-word {
-            background: #fef7c0;
-            border: 2px solid #dbb64f;
-            border-radius: 60px;
-            padding: 8px 22px;
-            font-weight: bold;
-            color: #3b2a1f;
-            cursor: grab;
-            display: inline-block;
-            transition: 0.1s;
-            box-shadow: 0 3px 5px rgba(0,0,0,0.1);
-            user-select: none;
-        }
-        .drag-word:active { cursor: grabbing; }
-
-        /* 角色配对区样式 */
-        .flex-rows {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            justify-content: space-between;
-        }
-        .role-pair-area {
-            flex: 1;
-            min-width: 220px;
-            background: #eef3e6;
-            border-radius: 32px;
-            padding: 1rem;
+            padding: 14px 20px;
+            border-radius: 20px;
+            margin-bottom: 14px;
             text-align: center;
         }
-        .role-title {
-            font-size: 1.3rem;
-            font-weight: bold;
-            background: #cfe3d4;
-            border-radius: 40px;
-            padding: 6px;
-            margin-bottom: 12px;
+        .header h1 { margin: 0 0 8px; font-size: 1.5rem; }
+        .header .subtitle { margin: 0; opacity: 0.92; font-size: 0.85rem; line-height: 1.5; }
+
+        .simulation-panel {
+            display: flex;
+            flex-wrap: nowrap;
+            gap: 16px;
+            margin-bottom: 20px;
         }
-        .role-dropzone {
-            background: #fffef0;
-            border: 2px dashed #85b79a;
+        .floating-bed-viz {
+            flex: 1;
+            min-width: 450px;
+            background: #eef3e3;
             border-radius: 24px;
             padding: 14px;
-            min-height: 120px;
-            margin-top: 10px;
-            font-size: 0.85rem;
-            color: #2f5d44;
-            transition: background 0.1s;
+            box-shadow: 0 8px 18px rgba(0,0,0,0.05);
+            border: 1px solid #cfe2b4;
         }
-        .dropped-text {
-            font-weight: 500;
-            background: #e1efda;
-            padding: 8px;
-            border-radius: 28px;
-        }
-        .drag-description {
-            background: #d9e6db;
-            border: 2px solid #5f8b6f;
-            border-radius: 28px;
-            padding: 12px 20px;
-            font-size: 0.9rem;
-            max-width: 260px;
-            cursor: grab;
-            user-select: none;
-        }
-        .drag-description:active { cursor: grabbing; }
-
-        .btn-check {
-            background: #2d6a4f;
-            color: white;
-            border: none;
-            border-radius: 60px;
-            padding: 0.8rem 2rem;
-            font-size: 1.1rem;
+        .viz-title {
             font-weight: bold;
-            cursor: pointer;
-            transition: 0.2s;
+            font-size: 1.3rem;
+            margin-bottom: 12px;
+            text-align: center;
+            color: #2a6b2f;
+        }
+        .bed-canvas-container {
+            background: #cbe0cd;
+            border-radius: 28px;
+            padding: 10px;
+            box-shadow: inset 0 0 0 2px #fef9e6, 0 6px 12px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        canvas#floatingBedCanvas {
+            width: 100%;
+            height: auto;
+            background: #cae1f0;
+            border-radius: 20px;
             display: block;
-            margin: 20px auto 0;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            margin: 0 auto;
+            cursor: pointer;
         }
-        .btn-check:hover { background: #1f543e; transform: scale(0.98); }
-        .error-msg {
-            background: #ffe0db;
-            border-radius: 60px;
-            padding: 10px 20px;
+        .canvas-note {
+            font-size: 0.75rem;
             text-align: center;
-            color: #b33a2c;
+            margin-top: 12px;
+            color: #2c6330;
             font-weight: 500;
-            margin-top: 16px;
-        }
-        .success-msg {
-            background: #cfe8dc;
-            color: #145c32;
         }
 
-        /* 池塘部分样式保持 */
-        .pond-title { font-size: 1.8rem; text-align: center; color: #1e5631; }
-        .pond-framework {
-            background: #dbefe8;
-            border-radius: 64px 64px 48px 48px;
-            padding: 1.8rem 1rem;
-            box-shadow: inset 0 0 0 3px #fff9e8, 0 12px 22px rgba(0,0,0,0.1);
-            margin-bottom: 1.8rem;
-        }
-        .ecosystem-grid {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 1.2rem;
-            justify-content: center;
-        }
-        .zone-card {
+        .builder-panel {
             flex: 1;
-            min-width: 180px;
-            background: rgba(255, 251, 225, 0.9);
-            border-radius: 2rem;
-            padding: 1rem 0.8rem;
-            backdrop-filter: blur(3px);
-            box-shadow: 0 8px 14px rgba(0, 0, 0, 0.1);
+            min-width: 380px;
+            background: #fefcf5;
+            border-radius: 24px;
+            padding: 14px;
+            box-shadow: 0 6px 14px rgba(0,0,0,0.05);
+            border: 1px solid #e2e8cf;
         }
-        .zone-title {
-            font-size: 1.35rem;
-            font-weight: bold;
-            text-align: center;
-            border-bottom: 3px dashed #7fbc9a;
-            margin-bottom: 0.8rem;
-            color: #1a4c2c;
+        .builder-panel .section {
+            display: inline-block;
+            width: calc(50% - 6px);
+            vertical-align: top;
         }
-        .zone-items { min-height: 130px; display: flex; flex-direction: column; gap: 8px; }
-        .component-chip {
-            background: #fff2cf;
-            border-radius: 40px;
-            padding: 8px 12px;
-            font-weight: 600;
-            cursor: pointer;
+        .section h3 {
+            margin: 0 0 8px 0;
+            font-size: 0.95rem;
+            color: #2b6e3c;
+            border-left: 4px solid #6fbf4c;
+            padding-left: 10px;
+        }
+        .item-row {
             display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 8px;
+            background: #f9fef5;
+            padding: 5px 10px;
+            border-radius: 20px;
             justify-content: space-between;
         }
-        .pending-area {
-            background: #faf2dd;
-            border-radius: 2rem;
-            margin-top: 1rem;
-            padding: 1rem;
+        .item-info {
+            flex: 1.5;
+            min-width: 90px;
+            font-weight: 500;
+            font-size: 0.85rem;
         }
-        .pending-items {
+        .item-desc {
+            font-size: 0.65rem;
+            color: #537a3c;
+            margin-left: 4px;
+        }
+        .item-control {
             display: flex;
-            flex-wrap: wrap;
+            align-items: center;
+            gap: 4px;
+            background: #eef3e6;
+            padding: 3px 8px;
+            border-radius: 16px;
+        }
+        .item-control label { font-size: 0.7rem; font-weight: 500; }
+        input.amount-slider { width: 70px; }
+        .amount-value { min-width: 22px; font-size: 0.75rem; font-weight: bold; color: #2a6b2f; }
+        .param-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .param-row label {
+            font-size: 0.8rem;
+        }
+        button.simulate-btn {
+            background: #2b6e3c;
+            border: none;
+            color: white;
+            font-size: 1rem;
+            font-weight: bold;
+            padding: 10px;
+            width: 100%;
+            border-radius: 60px;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-top: 12px;
+        }
+        button.simulate-btn:hover { background: #1b562c; transform: scale(1.01); }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
             gap: 12px;
         }
-        .pending-chip {
-            background: #e9dbbd;
-            border-radius: 40px;
-            padding: 8px 18px;
-            font-weight: 600;
-            cursor: pointer;
+        .chart-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 6px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.03);
         }
-        .reset-btn {
-            background: #4c6a3b;
-            border: none;
-            border-radius: 2rem;
-            padding: 0.5rem 1.2rem;
-            color: white;
-            font-weight: bold;
-            cursor: pointer;
+        .chart-card canvas {
+            max-height: 120px;
         }
-        .verify-btn {
-            background: #2d6a4f;
-            border: none;
-            border-radius: 2rem;
-            padding: 0.5rem 1.2rem;
-            color: white;
-            font-weight: bold;
-            cursor: pointer;
-            margin-left: 1rem;
-        }
-        .success-message {
-            background: #2c6e49;
-            color: white;
-            border-radius: 60px;
-            padding: 0.6rem;
+        .note {
+            font-size: 0.7rem;
             text-align: center;
-            margin-top: 1rem;
+            margin-top: 12px;
+            color: #5f7850;
+            background: #f4f9ef;
+            padding: 6px;
+            border-radius: 16px;
         }
-        .instruction {
-            background: #e5f4ec;
-            border-radius: 2rem;
-            padding: 0.5rem;
+        footer {
+            font-size: 0.65rem;
             text-align: center;
-            margin-bottom: 1rem;
-            font-size: 0.9rem;
+            margin-top: 12px;
+            color: #6c7a5f;
         }
-        footer { text-align: center; padding: 1rem; font-size: 0.8rem; color: #457b5e; }
-        @media (max-width: 780px) {
-            .panel { padding: 1rem; }
-            .drag-word { padding: 4px 12px; font-size: 0.8rem; }
-        }
+        .slider-group { font-size: 0.75rem; margin-bottom: 6px; }
+        input[type="range"] { cursor: pointer; }
+        .enable-check { margin-left: 5px; transform: scale(1.1); cursor: pointer; }
     </style>
 </head>
 <body>
-<div class="app-container">
-    <!-- 第一部分：拖拽填空 + 角色配对 -->
-    <div id="quizPanel" class="panel">
-        <h1>🌿 生态系统结构模拟器 🌍</h1>
-        <div style="text-align:center;"><span class="sub">拖拽词汇卡片到空白处 | 提交时验证正误</span></div>
-
-        <!-- 填空题1 -->
-        <div class="sentence-card">
-            <div>📘 <strong>①</strong> 在一定空间范围内，由生物群落与它的非生物环境相互作用而形成的统一整体，叫作 
-                <span class="drag-slot" id="slotDef" data-filled="">⬅️ 拖拽至此</span>。
-            </div>
-        </div>
-        <!-- 填空题2 -->
-        <div class="sentence-card">
-            <div>🔗 <strong>②</strong> 生态系统的结构包括 
-                <span class="drag-slot" id="slotStruct1" data-filled=""></span> 和 
-                <span class="drag-slot" id="slotStruct2" data-filled=""></span> (也叫作食物链和食物网)。
-            </div>
-        </div>
-        <!-- 填空题3：组成成分四个空，无额外提示语 -->
-        <div class="sentence-card">
-            <div>🧩 <strong>③</strong> 生态系统的组成成分为 
-                <span class="drag-slot" id="compSlot1" data-filled=""></span> 、 
-                <span class="drag-slot" id="compSlot2" data-filled=""></span> 、 
-                <span class="drag-slot" id="compSlot3" data-filled=""></span> 和 
-                <span class="drag-slot" id="compSlot4" data-filled=""></span>。
-            </div>
+<div class="container">
+        <div class="header">
+            <h1>🌿 生态浮床模拟实验室</h1>
+            <p class="subtitle">生态浮床通过植物吸收、微生物降解、填料吸附等多重机制，有效去除水体中的氨氮、总氮、总磷等污染物，实现水质净化与生态修复</p>
         </div>
 
-        <!-- 可拖拽词汇卡片（包括正确答案+干扰项） -->
-        <div class="drag-card-list" id="vocabCardsContainer"></div>
-
-        <!-- 重置填空按钮 -->
-        <div style="text-align:right; margin-bottom: 12px;">
-            <button id="resetFillBlanksBtn" class="reset-btn" style="background:#7e9f6e;">🗑️ 清空所有填空</button>
+    <div class="simulation-panel">
+        <!-- 左侧放大生态浮床图像区（分区随机分布）-->
+        <div class="floating-bed-viz">
+            <div class="viz-title">🌾 生态浮床动态结构图（分区随机分布）</div>
+            <div class="bed-canvas-container">
+                <canvas id="floatingBedCanvas" width="750" height="440" style="width:100%; height:auto; max-width:750px; aspect-ratio:750/440"></canvas>
+            </div>
+            <div class="canvas-note">✅ 仅显示启用的组分 | 植物浮床上方 | 生物膜靠近底部 | 碳纤维/碳素纤维生态草悬挂浮床下</div>
+            <!-- 水质曲线区 -->
+            <div class="charts-grid" style="margin-top:16px;">
+                <div class="chart-card"><canvas id="chartNH4"></canvas><div style="text-align:center;">氨氮 NH₄⁺-N (mg/L)</div></div>
+                <div class="chart-card"><canvas id="chartTN"></canvas><div style="text-align:center;">总氮 TN (mg/L)</div></div>
+                <div class="chart-card"><canvas id="chartTP"></canvas><div style="text-align:center;">总磷 TP (mg/L)</div></div>
+                <div class="chart-card"><canvas id="chartDO"></canvas><div style="text-align:center;">溶解氧 DO (mg/L)</div></div>
+            </div>
+            <div class="note" id="simNote" style="margin-top:12px;">✨ 点击模拟 → 曲线反映组分差异、填料时间增强效应、pH抑制及黄金螺优势</div>
         </div>
 
-        <!-- 生态组分 - 作用配对区域（描述卡片拖拽） -->
-        <h3 style="margin: 1.2rem 0 0.5rem; color:#2c6042;">🌿 角色功能配对：将下方描述卡片拖拽至对应生态组分的方框中</h3>
-        <div class="flex-rows" id="roleMatchingArea">
-            <div class="role-pair-area" data-role="producer">
-                <div class="role-title">🌱 生产者</div>
-                <div class="role-dropzone" id="dropProducerRole">⬅️ 将正确描述拖拽至此</div>
+        <!-- 右侧控制区 -->
+        <div class="builder-panel">
+            <div class="section">
+                <h3>🌾 浮床植物（氮磷去除速率差异）</h3>
+                <div id="plant-list"></div>
             </div>
-            <div class="role-pair-area" data-role="consumer">
-                <div class="role-title">🦆 消费者</div>
-                <div class="role-dropzone" id="dropConsumerRole">⬅️ 拖拽正确描述</div>
+            <div class="section">
+                <h3>🧫 生物填料（随时间挂膜增强）</h3>
+                <div id="filler-list"></div>
             </div>
-            <div class="role-pair-area" data-role="decomposer">
-                <div class="role-title">🧫 分解者</div>
-                <div class="role-dropzone" id="dropDecomposerRole">⬅️ 拖拽正确描述</div>
+            <div class="section">
+                <h3>🐚 底栖动物（黄金螺最优）</h3>
+                <div id="animal-list"></div>
             </div>
-            <div class="role-pair-area" data-role="abiotic">
-                <div class="role-title">💧 非生物物质和能量</div>
-                <div class="role-dropzone" id="dropAbioticRole">⬅️ 拖拽正确描述</div>
+            <div class="section">
+                <h3>⚙️ 底泥含量 & 初始水质</h3>
+                <div class="slider-group"><label>🟫 底泥含量 (内源抑制): <span id="sedimentVal">20</span>%</label><input type="range" id="sedimentSlider" min="0" max="100" step="5" value="20"></div>
+                <div class="param-row">
+                    <div><label>pH (高值抑制): <span id="phVal">7.2</span></label><input type="range" id="phInput" min="6" max="10" step="0.1" value="7.2"></div>
+                    <div><label>温度 (℃): <span id="tempVal">25</span></label><input type="range" id="tempInput" min="10" max="35" step="0.5" value="25"></div>
+                    <div><label>DO (mg/L): <span id="doVal">3.5</span></label><input type="range" id="doInput" min="0" max="10" step="0.2" value="3.5"></div>
+                    <div><label>氨氮 (mg/L): <span id="nh4Val">5.2</span></label><input type="range" id="nh4Input" min="0" max="12" step="0.2" value="5.2"></div>
+                    <div><label>总氮 (mg/L): <span id="tnVal">8.5</span></label><input type="range" id="tnInput" min="0" max="20" step="0.2" value="8.5"></div>
+                    <div><label>总磷 (mg/L): <span id="tpVal">1.2</span></label><input type="range" id="tpInput" min="0" max="5" step="0.05" value="1.2"></div>
+                </div>
             </div>
+            <button id="runSimulation" class="simulate-btn">🌊 启动模拟 → 预测30天水质曲线</button>
         </div>
-
-        <!-- 可拖拽的作用描述卡片（随机顺序，无前缀） -->
-        <div id="descCardsContainer" class="drag-card-list" style="background:#eaf1e3;"></div>
-
-        <button id="submitQuizBtn" class="btn-check">✓ 验证全部知识并进入泮池 ✓</button>
-        <div id="quizErrorMsg" style="text-align: center; min-height: 60px;"></div>
-        <footer>💡 提示：任意词汇都可以拖入空白槽，但提交时必须全部正确才能进入下一关。</footer>
     </div>
-
-    <!-- 第二部分：泮池生态系统构建（修改后） -->
-    <div id="pondPanel" class="panel hidden-panel">
-        <h1 class="pond-title">🦢 泮池生态构建之旅 🌾</h1>
-        <div class="instruction">✨ 先点击待整理组分卡片，再点击对应的组分区域，可以删除重新整理 ✨</div>
-        <div class="pond-framework">
-            <div class="ecosystem-grid">
-                <div class="zone-card" data-zone-type="producer"><div class="zone-title">🌱 生产者</div><div id="producerZone" class="zone-items"></div></div>
-                <div class="zone-card" data-zone-type="consumer"><div class="zone-title">🦆 消费者</div><div id="consumerZone" class="zone-items"></div></div>
-                <div class="zone-card" data-zone-type="decomposer"><div class="zone-title">🍄 分解者</div><div id="decomposerZone" class="zone-items"></div></div>
-                <div class="zone-card" data-zone-type="abiotic"><div class="zone-title">💧 非生物物质和能量</div><div id="abioticZone" class="zone-items"></div></div>
-            </div>
-        </div>
-        <div class="pending-area">
-            <div class="pending-title">
-                📦 待整理组分 
-                <button id="resetClassificationBtn" class="reset-btn" style="margin-left:auto;">🔄 全部重置</button>
-                <button id="verifyClassificationBtn" class="verify-btn">✓ 验证分类结果</button>
-            </div>
-            <div id="pendingList" class="pending-items"></div>
-        </div>
-        <div id="pondSuccessMsg" style="text-align: center; margin-top: 12px;"></div>
-        <!-- 已删除原提示语“新组分”两行 -->
-    </div>
+    <footer>🧪 教学模型 | 植物全在上方 | 生物膜沉底 | 碳纤维/碳素纤维生态草悬挂浮床下 | 美人蕉/黄金螺效果最强</footer>
 </div>
 
 <script>
-    // ======================= 第一部分：拖拽填空（允许任意词汇放入）========================
-    // 正确词汇及干扰项
-    const correctWords = ["生态系统", "组成成分", "营养结构", "生产者", "消费者", "分解者", "非生物物质和能量"];
-    const wrongWords = ["生物群落", "寄生者", "营养成分", "能量流动", "物质循环"];
-    let allDragWords = [...correctWords, ...wrongWords];
-    
-    // 槽位定义
-    const fillSlots = [
-        { id: "slotDef", correct: "生态系统", group: null },
-        { id: "slotStruct1", correct: "组成成分", group: null },
-        { id: "slotStruct2", correct: "营养结构", group: null },
-        { id: "compSlot1", correct: null, group: "comp" },
-        { id: "compSlot2", correct: null, group: "comp" },
-        { id: "compSlot3", correct: null, group: "comp" },
-        { id: "compSlot4", correct: null, group: "comp" }
+    // 组分数据（无形状描述）
+    const plantsData = [
+        { id: "美人蕉", name: "🌺 美人蕉", desc: "去除氮磷最强", baseEffect: 0.032 },
+        { id: "菖蒲", name: "🌿 菖蒲", desc: "除氮磷良好", baseEffect: 0.028 },
+        { id: "风车草", name: "🎋 风车草", desc: "去除较慢", baseEffect: 0.023 },
+        { id: "梭鱼草", name: "💜 梭鱼草", desc: "除氮磷良好", baseEffect: 0.028 }
     ];
-    const compCorrectSet = ["生产者", "消费者", "分解者", "非生物物质和能量"];
+    const fillersData = [
+        { id: "碳纤维", name: "🧵 碳纤维", desc: "挂膜较快", baseEffect: 0.024, zone: "suspended" },    // 悬挂浮床下
+        { id: "生物膜", name: "🧬 生物膜", desc: "基础填料", baseEffect: 0.021, zone: "bottom" },      // 底部集中
+        { id: "碳素纤维生态草", name: "🌾 碳素纤维生态草", desc: "挂膜最强", baseEffect: 0.029, zone: "suspended" }
+    ];
+    const animalsData = [
+        { id: "黄金螺", name: "🐌 黄金螺", desc: "净化效果最佳", baseEffect: 0.023 },
+        { id: "金鱼", name: "🐠 金鱼", desc: "辅助净化", baseEffect: 0.017 },
+        { id: "清道夫", name: "🐟 清道夫", desc: "辅助净化", baseEffect: 0.018 }
+    ];
+
+    let plantAmounts = { "美人蕉": 0, "菖蒲": 0, "风车草": 0, "梭鱼草": 0 };
+    let fillerAmounts = { "碳纤维": 0, "生物膜": 0, "碳素纤维生态草": 0 };
+    let animalAmounts = { "黄金螺": 0, "金鱼": 0, "清道夫": 0 };
     
-    // 初始化拖拽卡片列表（随机顺序）
-    function initVocabCards() {
-        const container = document.getElementById("vocabCardsContainer");
-        container.innerHTML = "";
-        const shuffled = [...allDragWords];
-        for (let i = shuffled.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-        }
-        shuffled.forEach(word => {
-            const card = document.createElement("div");
-            card.className = "drag-word";
-            card.setAttribute("draggable", "true");
-            card.setAttribute("data-value", word);
-            card.innerText = word;
-            card.addEventListener("dragstart", function(e) {
-                e.dataTransfer.setData("text/plain", JSON.stringify({
-                    type: "vocab",
-                    value: word
-                }));
-                e.dataTransfer.effectAllowed = "copy";
-            });
-            container.appendChild(card);
-        });
-    }
+    // 存储固定位置（符合分区约束）
+    let plantPositions = {};   // { plantName: [{x,y}] }
+    let fillerPositions = [];   // { type, x, y }
+    let animalPositions = [];
     
-    // 渲染所有槽位内容（从 data-filled 读取）
-    function syncSlotsFromDOM() {
-        fillSlots.forEach(slot => {
-            const el = document.getElementById(slot.id);
-            if (!el) return;
-            const current = el.getAttribute("data-filled") || "";
-            if (current) {
-                el.innerText = current;
-                el.classList.add("filled");
-                if (!el.querySelector(".slot-clear")) {
-                    const clearSpan = document.createElement("span");
-                    clearSpan.className = "slot-clear";
-                    clearSpan.innerHTML = "✖";
-                    clearSpan.title = "清除此项";
-                    clearSpan.addEventListener("click", (e) => {
-                        e.stopPropagation();
-                        clearSlot(slot.id);
-                    });
-                    el.appendChild(clearSpan);
-                }
-            } else {
-                el.innerText = "⬅️ 拖拽至此";
-                el.classList.remove("filled");
-                const clearBtn = el.querySelector(".slot-clear");
-                if (clearBtn) clearBtn.remove();
-            }
-        });
-    }
+    const plantContainer = document.getElementById("plant-list");
+    const fillerContainer = document.getElementById("filler-list");
+    const animalContainer = document.getElementById("animal-list");
+    const sedimentSlider = document.getElementById("sedimentSlider");
+    const sedimentValSpan = document.getElementById("sedimentVal");
+    const phInput = document.getElementById('phInput'), doInput = document.getElementById('doInput'), tempInput = document.getElementById('tempInput');
+    const nh4Input = document.getElementById('nh4Input'), tnInput = document.getElementById('tnInput'), tpInput = document.getElementById('tpInput');
+    const phValSpan = document.getElementById('phVal'), doValSpan = document.getElementById('doVal'), tempValSpan = document.getElementById('tempVal');
+    const nh4ValSpan = document.getElementById('nh4Val'), tnValSpan = document.getElementById('tnVal'), tpValSpan = document.getElementById('tpVal');
+    const runBtn = document.getElementById('runSimulation');
     
-    function clearSlot(slotId) {
-        const el = document.getElementById(slotId);
-        if (el) {
-            el.setAttribute("data-filled", "");
-            syncSlotsFromDOM();
-        }
-    }
+    const canvas = document.getElementById('floatingBedCanvas');
+    let ctx = canvas.getContext('2d');
     
-    // 清空所有填空
-    function resetAllSlots() {
-        fillSlots.forEach(slot => {
-            const el = document.getElementById(slot.id);
-            if (el) el.setAttribute("data-filled", "");
-        });
-        syncSlotsFromDOM();
-    }
-    
-    // 修改后的拖拽填充：不进行任何正确性验证，直接放入
-    function tryFillSlot(slotId, word) {
-        const slotEl = document.getElementById(slotId);
-        if (!slotEl) return false;
-        // 直接设置拖拽的词汇，不做任何正确性检查
-        slotEl.setAttribute("data-filled", word);
-        syncSlotsFromDOM();
-        return true;
-    }
-    
-    function showToast(msg) {
-        const errDiv = document.getElementById("quizErrorMsg");
-        errDiv.innerHTML = `<div class="error-msg">⚠️ ${msg} ⚠️</div>`;
-        setTimeout(() => {
-            if (errDiv.innerHTML.includes(msg)) errDiv.innerHTML = "";
-        }, 2000);
-    }
-    
-    // 为每个槽位绑定drop事件
-    function initDropSlots() {
-        const slots = document.querySelectorAll(".drag-slot");
-        slots.forEach(slot => {
-            slot.addEventListener("dragover", (e) => {
-                e.preventDefault();
-                e.dataTransfer.dropEffect = "copy";
-            });
-            slot.addEventListener("drop", (e) => {
-                e.preventDefault();
-                const rawData = e.dataTransfer.getData("text/plain");
-                if (!rawData) return;
-                let dragInfo;
-                try { dragInfo = JSON.parse(rawData); } catch(err) { return; }
-                if (dragInfo.type !== "vocab") {
-                    showToast("只能拖拽词汇卡片到填空区域");
-                    return;
-                }
-                const word = dragInfo.value;
-                tryFillSlot(slot.id, word);
-            });
-        });
-    }
-    
-    // 提交时的验证（所有填空必须正确）
-    function validateFillBlanks() {
-        // 1. 固定槽位验证
-        const defVal = document.getElementById("slotDef").getAttribute("data-filled");
-        if (defVal !== "生态系统") return false;
-        const struct1Val = document.getElementById("slotStruct1").getAttribute("data-filled");
-        if (struct1Val !== "组成成分") return false;
-        const struct2Val = document.getElementById("slotStruct2").getAttribute("data-filled");
-        if (struct2Val !== "营养结构") return false;
+    // ---------- 生成符合分区约束的固定位置 ----------
+    function regenerateRandomPositions() {
+        const w = canvas.width, h = canvas.height;
+        // 浮床平台参数 (用于位置参考)
+        const platformY = h * 0.22;      // 平台顶部y
+        const platformBottom = platformY + 24; // 平台底部
+        const platformX = w * 0.1;        // 平台左侧x
+        const platformW = w * 0.8;        // 平台宽度
         
-        // 2. 组成成分四个槽位：必须全部已填，且四个值恰好是生产者、消费者、分解者、非生物物质和能量（各一个，无重复，无其他值）
-        const compSlotIds = ["compSlot1", "compSlot2", "compSlot3", "compSlot4"];
-        const compValues = [];
-        for (let id of compSlotIds) {
-            const val = document.getElementById(id).getAttribute("data-filled");
-            if (!val || val === "") return false;
-            compValues.push(val);
-        }
-        // 检查每个值是否都在正确集合中
-        for (let v of compValues) {
-            if (!compCorrectSet.includes(v)) return false;
-        }
-        // 检查四个值是否正好覆盖四个正确成分（无重复）
-        const uniqueSet = new Set(compValues);
-        if (uniqueSet.size !== 4) return false;
-        for (let correct of compCorrectSet) {
-            if (!uniqueSet.has(correct)) return false;
-        }
-        return true;
-    }
-    
-    // ========== 角色配对描述拖拽（保持不变，必须正确配对） ==========
-    function initDescriptionCards() {
-        const descriptions = [
-            { type: "producer", text: "以光合自养为例，通过光合作用，将太阳能固定在它们所制造的有机物中，将太阳能转化成化学能，从而可以被生物所利用，是生态系统的基石。" },
-            { type: "consumer", text: "将有机物转化为无机物，加快生态系统的物质循环，对于植物的传粉和种子的传播等具有重要作用。" },
-            { type: "decomposer", text: "将动植物遗体和动物的排遗物分解成无机物，是生态系统必需的关键成分。" },
-            { type: "abiotic", text: "为生物提供物质和能量，是生物群落赖以生存和发展的基础。" }
-        ];
-        const shuffled = [...descriptions];
-        for (let i = shuffled.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-        }
-        const container = document.getElementById("descCardsContainer");
-        container.innerHTML = "";
-        shuffled.forEach(desc => {
-            const card = document.createElement("div");
-            card.className = "drag-description";
-            card.setAttribute("draggable", "true");
-            card.setAttribute("data-desc-type", desc.type);
-            card.setAttribute("data-desc-text", desc.text);
-            card.innerText = desc.text;
-            card.addEventListener("dragstart", function(e) {
-                e.dataTransfer.setData("text/plain", JSON.stringify({
-                    type: "description",
-                    descType: this.getAttribute("data-desc-type"),
-                    descText: this.getAttribute("data-desc-text")
-                }));
-                e.dataTransfer.effectAllowed = "copy";
-            });
-            container.appendChild(card);
-        });
-    }
-    
-    function initRoleDropZones() {
-        const zones = document.querySelectorAll(".role-dropzone");
-        zones.forEach(zone => {
-            zone.addEventListener("dragover", (e) => e.preventDefault());
-            zone.addEventListener("drop", (e) => {
-                e.preventDefault();
-                const raw = e.dataTransfer.getData("text/plain");
-                if (!raw) return;
-                let dragInfo;
-                try { dragInfo = JSON.parse(raw); } catch(e) { return; }
-                if (dragInfo.type !== "description") {
-                    showToast("请拖拽下方的描述卡片进行配对");
-                    return;
-                }
-                const descType = dragInfo.descType;
-                const descText = dragInfo.descText;
-                let targetRole = null;
-                if (zone.id === "dropProducerRole") targetRole = "producer";
-                else if (zone.id === "dropConsumerRole") targetRole = "consumer";
-                else if (zone.id === "dropDecomposerRole") targetRole = "decomposer";
-                else if (zone.id === "dropAbioticRole") targetRole = "abiotic";
-                if (!targetRole) return;
-                if (descType !== targetRole) {
-                    let correctName = "";
-                    if (descType === "producer") correctName = "生产者";
-                    else if (descType === "consumer") correctName = "消费者";
-                    else if (descType === "decomposer") correctName = "分解者";
-                    else correctName = "非生物物质和能量";
-                    showToast(`❌ 此描述属于“${correctName}”，不能放入当前区域`);
-                    return;
-                }
-                zone.innerHTML = `<div class="dropped-text">✅ ${descText}</div>`;
-                zone.setAttribute("data-paired", descType);
-            });
-        });
-    }
-    
-    function validateRoleMatching() {
-        const expectedProducer = "以光合自养为例，通过光合作用，将太阳能固定在它们所制造的有机物中，将太阳能转化成化学能，从而可以被生物所利用，是生态系统的基石。";
-        const expectedConsumer = "将有机物转化为无机物，加快生态系统的物质循环，对于植物的传粉和种子的传播等具有重要作用。";
-        const expectedDecomposer = "将动植物遗体和动物的排遗物分解成无机物，是生态系统必需的关键成分。";
-        const expectedAbiotic = "为生物提供物质和能量，是生物群落赖以生存和发展的基础。";
-        const prodZone = document.getElementById("dropProducerRole").innerHTML;
-        const consZone = document.getElementById("dropConsumerRole").innerHTML;
-        const decZone = document.getElementById("dropDecomposerRole").innerHTML;
-        const abioZone = document.getElementById("dropAbioticRole").innerHTML;
-        return prodZone.includes(expectedProducer.substring(0,60)) &&
-               consZone.includes(expectedConsumer.substring(0,60)) &&
-               decZone.includes(expectedDecomposer.substring(0,60)) &&
-               abioZone.includes(expectedAbiotic.substring(0,60));
-    }
-    
-    // 提交总验证
-    const submitBtn = document.getElementById("submitQuizBtn");
-    const quizPanelDiv = document.getElementById("quizPanel");
-    const pondPanelDiv = document.getElementById("pondPanel");
-    const errorMsgDiv = document.getElementById("quizErrorMsg");
-    
-    function allQuizCorrect() {
-        return validateFillBlanks() && validateRoleMatching();
-    }
-    
-    submitBtn.addEventListener("click", () => {
-        if (allQuizCorrect()) {
-            quizPanelDiv.classList.add("hidden-panel");
-            pondPanelDiv.classList.remove("hidden-panel");
-            initPondEcosystem();
-            errorMsgDiv.innerHTML = "";
-        } else {
-            errorMsgDiv.innerHTML = '<div class="error-msg">❌ 答案错误！请检查所有填空是否正确（定义、结构、组成成分必须正确），且每个生态角色已配对正确的描述。</div>';
-            setTimeout(() => {
-                if (errorMsgDiv.innerHTML.includes("答案错误")) errorMsgDiv.innerHTML = "";
-            }, 3000);
-        }
-    });
-    
-    // 重置填空按钮
-    document.getElementById("resetFillBlanksBtn").addEventListener("click", resetAllSlots);
-    
-    // ======================= 第二部分：泮池生态系统 (组件更新) =======================
-    const pondComponents = [
-        { name: "🌳 树木", category: "producer" }, { name: "🌿 草", category: "producer" }, { name: "🧫 硝化菌", category: "producer" },
-        { name: "🦢 黑天鹅", category: "consumer" }, { name: "🦆 绿头鸭", category: "consumer" }, { name: "🌿 黑藻", category: "producer" },
-        { name: "🪱 蚯蚓", category: "decomposer" }, { name: "🧫 腐生微生物", category: "decomposer" }, { name: "☀️ 阳光", category: "abiotic" },
-        { name: "💧 水份", category: "abiotic" }, { name: "🪨 淤泥", category: "abiotic" }, { name: "🌿 菟丝子", category: "consumer" },
-        { name: "🦐 沼虾", category: "consumer" }
-    ];
-    let componentStatus = [];
-    let selectedComponentIndex = null;
-    const zoneMapPond = {
-        producer: { containerId: "producerZone", label: "生产者" },
-        consumer: { containerId: "consumerZone", label: "消费者" },
-        decomposer: { containerId: "decomposerZone", label: "分解者" },
-        abiotic: { containerId: "abioticZone", label: "非生物物质和能量" }
-    };
-    
-    function renderPond() {
-        for (let zk in zoneMapPond) document.getElementById(zoneMapPond[zk].containerId).innerHTML = "";
-        const pendingContainer = document.getElementById("pendingList");
-        pendingContainer.innerHTML = "";
-        componentStatus.forEach((comp, idx) => {
-            if (comp.currentZone === "pending") {
-                const chip = document.createElement("div");
-                chip.className = "pending-chip";
-                if (selectedComponentIndex === idx) chip.classList.add("selected");
-                chip.innerHTML = `<span>${comp.name}</span>`;
-                chip.addEventListener("click", () => {
-                    if (selectedComponentIndex === idx) clearSelectedPond();
-                    else { clearSelectedPond(); selectedComponentIndex = idx; renderPond(); }
-                });
-                pendingContainer.appendChild(chip);
-            } else {
-                const container = document.getElementById(zoneMapPond[comp.currentZone].containerId);
-                if (container) {
-                    const chip = document.createElement("div");
-                    chip.className = "component-chip";
-                    if (selectedComponentIndex === idx) chip.classList.add("selected");
-                    chip.innerHTML = `<span>${comp.name}</span><button class="remove-btn" data-idx="${idx}">✖️</button>`;
-                    chip.addEventListener("click", (e) => { if(e.target.classList.contains("remove-btn")) return; if(selectedComponentIndex === idx) clearSelectedPond(); else { clearSelectedPond(); selectedComponentIndex = idx; renderPond(); } });
-                    chip.querySelector(".remove-btn").addEventListener("click", (e) => { e.stopPropagation(); moveToPending(idx); });
-                    container.appendChild(chip);
-                }
+        // 1. 植物：均匀分布在浮床平台上方，贴在浮床长方形上
+        let newPlantPos = {};
+        let totalPlants = Object.values(plantAmounts).reduce((a,b)=>a+b,0);
+        let plantIndex = 0;
+        let plantRows = 2; // 两行植物
+        let plantsPerRow = Math.max(1, Math.ceil(totalPlants / plantRows));
+        let rowSpacing = 45; // 两行植物的间距
+        
+        for(let [name, amt] of Object.entries(plantAmounts)) {
+            if(amt <= 0) continue;
+            let count = Math.min(amt, 5);
+            let arr = [];
+            for(let i=0;i<count;i++) {
+                let row = Math.floor(plantIndex / plantsPerRow);
+                let col = plantIndex % plantsPerRow;
+                let x = platformX + 40 + col * (platformW - 80) / Math.max(1, plantsPerRow - 1);
+                let y = platformY - 5 + row * rowSpacing; // 贴近浮床顶部
+                arr.push({x, y});
+                plantIndex++;
             }
-        });
-        const allClassified = componentStatus.every(c => c.currentZone !== "pending");
-        const successDiv = document.getElementById("pondSuccessMsg");
-        if (allClassified) successDiv.innerHTML = '<div class="success-message">🎉 完美构建泮池生态系统！生态功能完整 🎉</div>';
-        else successDiv.innerHTML = "";
-    }
-    function clearSelectedPond() { selectedComponentIndex = null; renderPond(); }
-    function moveToPending(idx) { if(componentStatus[idx]) { componentStatus[idx].currentZone = "pending"; clearSelectedPond(); renderPond(); } }
-    function attemptMoveToZone(zoneKey) {
-        if (selectedComponentIndex === null) { showPondTip("请先点击一个待整理或已归类的组分卡片"); return false; }
-        const comp = componentStatus[selectedComponentIndex];
-        if (comp.category === zoneKey) {
-            comp.currentZone = zoneKey;
-            clearSelectedPond();
-            renderPond();
-            return true;
-        } else {
-            showPondTip(`❌ "${comp.name}" 不属于 ${zoneMapPond[zoneKey]?.label}，应属于 ${zoneMapPond[comp.category]?.label}`);
-            return false;
+            newPlantPos[name] = arr;
         }
-    }
-    function showPondTip(msg) {
-        const msgDiv = document.getElementById("pondSuccessMsg");
-        msgDiv.innerHTML = `<div class="error-msg" style="background:#ffddd3;">${msg}</div>`;
-        setTimeout(() => { if(msgDiv.innerHTML.includes(msg)) msgDiv.innerHTML = ""; }, 1800);
-    }
-    function resetAllClassification() {
-        componentStatus.forEach(c => c.currentZone = "pending");
-        clearSelectedPond();
-        renderPond();
-        showPondTip("🔄 已重置，重新构建泮池生态");
-    }
-    
-    // 新增验证分类结果的功能
-    function verifyClassification() {
-        let incorrect = [];
-        let pendingCount = 0;
-        componentStatus.forEach(comp => {
-            if (comp.currentZone === "pending") {
-                pendingCount++;
-                incorrect.push(`${comp.name} (未分类)`);
-            } else if (comp.currentZone !== comp.category) {
-                const zoneLabel = zoneMapPond[comp.currentZone]?.label || comp.currentZone;
-                const expectedLabel = zoneMapPond[comp.category]?.label || comp.category;
-                incorrect.push(`${comp.name} 当前在 ${zoneLabel}，应属于 ${expectedLabel}`);
+        plantPositions = newPlantPos;
+        
+        // 获取当前底泥高度 (用于底部边界)
+        let sedimentPercent = parseFloat(sedimentSlider.value) / 100;
+        let mudHeight = 35 + sedimentPercent * 55;
+        let bottomY = h - mudHeight;  // 底泥顶部y坐标
+        
+        // 2. 填料分区: 生物膜 -> 靠近底部 (bottomY~h-10) ; 碳纤维/碳素纤维生态草 -> 悬挂浮床下 (platformBottom+5 ~ h*0.65)
+        let newFillers = [];
+        let fillerIndex = 0;
+        for(let [fname, famt] of Object.entries(fillerAmounts)) {
+            if(famt <= 0) continue;
+            let fdata = fillersData.find(f => f.id === fname);
+            let baseCnt = Math.min(6, 2 + famt); // 减少数量，让图像更大更清晰
+            for(let i=0;i<baseCnt;i++) {
+                let x = platformX + 40 + (fillerIndex % 3) * (platformW - 80) / 2;
+                let y;
+                if(fdata.zone === "bottom") {
+                    // 生物膜集中在底泥上方附近
+                    y = bottomY - 8 + Math.floor(fillerIndex / 3) * 18;
+                    y = Math.min(y, h - 20);
+                    y = Math.max(y, bottomY - 25);
+                } else { // suspended 悬挂浮床下
+                    let minY = platformBottom + 15;
+                    let maxY = h * 0.55;
+                    y = minY + Math.floor(fillerIndex / 3) * (maxY - minY) / 2;
+                }
+                newFillers.push({type: fname, x, y});
+                fillerIndex++;
             }
+        }
+        fillerPositions = newFillers;
+        
+        // 3. 动物: 水体中下层固定位置 (避开底泥极端区)
+        let newAnimals = [];
+        let animalIndex = 0;
+        for(let [aname, aamt] of Object.entries(animalAmounts)) {
+            if(aamt <= 0) continue;
+            let acnt = Math.min(6, 1 + aamt);
+            for(let i=0;i<acnt;i++) {
+                let row = Math.floor(animalIndex / 3);
+                let col = animalIndex % 3;
+                let x = platformX + 50 + col * (platformW - 100) / 2;
+                let y = h * 0.5 + row * 50;
+                newAnimals.push({type: aname, x, y});
+                animalIndex++;
+            }
+        }
+        animalPositions = newAnimals;
+    }
+    
+    // ----- 柔和图形绘制 (无形状描述，仅视觉示意)-----
+    function drawPlant(ctx, x, y, type) {
+        ctx.save();
+        if(type === '美人蕉') {
+            ctx.fillStyle = "#5cb85c";
+            ctx.beginPath();
+            ctx.ellipse(x-14, y-28, 12, 22, -0.3, 0, Math.PI*2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.ellipse(x+14, y-30, 11, 20, 0.3, 0, Math.PI*2);
+            ctx.fill();
+            ctx.fillStyle = "#4a9e4a";
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.quadraticCurveTo(x-4, y-18, x, y-45);
+            ctx.quadraticCurveTo(x+4, y-18, x, y);
+            ctx.fill();
+            ctx.fillStyle = "#e67373";
+            ctx.beginPath(); ctx.ellipse(x, y-50, 4, 8, 0, 0, Math.PI*2); ctx.fill();
+        } else if(type === '菖蒲') {
+            ctx.fillStyle = "#6aab5a";
+            for(let i=-1;i<=1;i++) {
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+                ctx.quadraticCurveTo(x+i*3, y-25, x+i*2, y-50);
+                ctx.lineTo(x+i*5, y-52);
+                ctx.quadraticCurveTo(x+i*3, y-28, x, y);
+                ctx.fill();
+            }
+        } else if(type === '风车草') {
+            ctx.fillStyle = "#3c9e3c";
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(x-2, y-35);
+            ctx.lineTo(x+2, y-35);
+            ctx.fill();
+            for(let i=0;i<6;i++) {
+                let angle = (i / 6) * Math.PI * 2;
+                let bx = x + Math.cos(angle) * 6;
+                let by = y - 35 + Math.sin(angle) * 6;
+                ctx.beginPath();
+                ctx.moveTo(x, y-35);
+                ctx.quadraticCurveTo(x + Math.cos(angle)*15, y-35 + Math.sin(angle)*15, x + Math.cos(angle)*22, y-35 + Math.sin(angle)*22);
+                ctx.lineWidth = 4;
+                ctx.strokeStyle = "#3c9e3c";
+                ctx.stroke();
+            }
+            ctx.beginPath();
+            ctx.arc(x, y-35, 4, 0, Math.PI*2);
+            ctx.fillStyle = "#2d7d2d"; ctx.fill();
+        } else if(type === '梭鱼草') {
+            ctx.fillStyle = "#7cb342";
+            ctx.beginPath();
+            ctx.moveTo(x-3, y);
+            ctx.quadraticCurveTo(x-5, y-25, x, y-55);
+            ctx.quadraticCurveTo(x+5, y-25, x+3, y);
+            ctx.fill();
+            ctx.fillStyle = "#ad6dc9";
+            for(let i=0;i<6;i++) {
+                ctx.beginPath();
+                ctx.ellipse(x-3+i*1.2, y-45+i*4, 2, 4, 0, 0, Math.PI*2);
+                ctx.fill();
+            }
+        }
+        ctx.restore();
+    }
+    
+    function drawFiller(ctx, x, y, type) {
+        ctx.save();
+        if(type === '碳纤维') {
+            ctx.strokeStyle = "#5a6e7a";
+            for(let i=0;i<4;i++) {
+                ctx.beginPath();
+                ctx.lineWidth = 1.2;
+                ctx.moveTo(x-6+i*3, y);
+                ctx.lineTo(x-3+i*4, y-9);
+                ctx.stroke();
+            }
+        } else if(type === '生物膜') {
+            ctx.fillStyle = "#a1887f"; ctx.fillRect(x-14, y-10, 28, 20);
+            ctx.fillStyle = "#8d6e63";
+            for(let i=0;i<3;i++) ctx.fillRect(x-10+i*8, y-4, 3, 8);
+            ctx.fillStyle = "#6d4c41";
+            ctx.beginPath(); ctx.arc(x-6, y-2, 2, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(x, y-5, 2.5, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(x+6, y-2, 2, 0, Math.PI*2); ctx.fill();
+        } else if(type === '碳素纤维生态草') {
+            ctx.strokeStyle = "#4b6e8a";
+            ctx.lineWidth = 4;
+            for(let i=0;i<3;i++) {
+                ctx.beginPath();
+                let offsetX = (i-1) * 8;
+                ctx.moveTo(x + offsetX - 4, y);
+                ctx.bezierCurveTo(x + offsetX - 6, y-12, x + offsetX + 2, y-18, x + offsetX, y-28);
+                ctx.stroke();
+            }
+        }
+        ctx.restore();
+    }
+    
+    function drawAnimal(ctx, x, y, type) {
+        ctx.save();
+        if(type === '黄金螺') {
+            ctx.fillStyle = "#f5c542"; ctx.beginPath(); ctx.ellipse(x, y, 8, 5, 0, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = "#c47d2e"; ctx.beginPath(); ctx.ellipse(x-2, y-1, 2, 1.2, 0, 0, Math.PI*2); ctx.fill();
+        } else if(type === '金鱼') {
+            ctx.fillStyle = "#ff8c42"; ctx.beginPath(); ctx.ellipse(x, y, 9, 6, 0, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = "#e65100"; ctx.beginPath(); ctx.moveTo(x+6, y); ctx.lineTo(x+14, y-2); ctx.lineTo(x+11, y+2); ctx.fill();
+            ctx.fillStyle = "#000"; ctx.beginPath(); ctx.arc(x-3, y-1, 1.5, 0, Math.PI*2); ctx.fill();
+        } else if(type === '清道夫') {
+            ctx.fillStyle = "#6c757d"; ctx.beginPath(); ctx.ellipse(x, y, 12, 5, 0, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = "#343a40"; for(let i=0;i<3;i++) ctx.fillRect(x-7+i*4, y-1, 1.5, 2.5);
+            ctx.fillStyle = "#adb5bd"; ctx.beginPath(); ctx.ellipse(x-4, y-0.5, 1.8, 1.2, 0, 0, Math.PI*2); ctx.fill();
+        }
+        ctx.restore();
+    }
+    
+    // 绘制浮床（柔和，无黄色直线）
+    function drawFloatingBed() {
+        if(!ctx) return;
+        const w = canvas.width, h = canvas.height;
+        ctx.clearRect(0, 0, w, h);
+        const grad = ctx.createLinearGradient(0, 0, 0, h);
+        grad.addColorStop(0, "#7fc9e6"); grad.addColorStop(1, "#4e9ac7");
+        ctx.fillStyle = grad; ctx.fillRect(0, 0, w, h);
+        // 底泥
+        let sedimentPercent = parseFloat(sedimentSlider.value) / 100;
+        let mudHeight = 35 + sedimentPercent * 55;
+        ctx.fillStyle = "#8B5A2B"; ctx.fillRect(0, h - mudHeight, w, mudHeight);
+        ctx.fillStyle = "#b97f47"; ctx.fillRect(0, h - mudHeight + 6, w, mudHeight-12);
+        // 浮床平台 (柔和圆角)
+        let platformX = w*0.1, platformY = h*0.22, platformW = w*0.8, platformH = 24;
+        ctx.fillStyle = "#5b8c50cc";
+        ctx.beginPath(); ctx.roundRect(platformX, platformY, platformW, platformH, 12); ctx.fill();
+        ctx.fillStyle = "#3e6b34";
+        ctx.beginPath(); ctx.roundRect(platformX, platformY, platformW, 7, 8); ctx.fill();
+        // 根系曲线 (柔和)
+        ctx.beginPath(); ctx.strokeStyle = "#b59a6b"; ctx.lineWidth = 1.8;
+        for(let i=0;i<20;i++) {
+            let x = w*0.12 + i*34;
+            if(x < w*0.88) {
+                ctx.beginPath();
+                ctx.moveTo(x, platformY+platformH-2);
+                ctx.quadraticCurveTo(x-6+Math.random()*12, platformY+platformH+30+Math.random()*25, x+2, platformY+platformH+55);
+                ctx.stroke();
+            }
+        }
+        // 绘制植物 (全部位于浮床上方)
+        for(let [pname, posArr] of Object.entries(plantPositions)) {
+            for(let pos of posArr) drawPlant(ctx, pos.x, pos.y, pname);
+        }
+        // 绘制填料
+        for(let f of fillerPositions) drawFiller(ctx, f.x, f.y, f.type);
+        // 绘制动物
+        for(let a of animalPositions) drawAnimal(ctx, a.x, a.y, a.type);
+        
+        ctx.font = "bold 14px 'Segoe UI'"; ctx.fillStyle = "#1f3b1a";
+        ctx.fillText(`🌿 植物总量:${Object.values(plantAmounts).reduce((a,b)=>a+b,0)}`, 14, 24);
+        ctx.fillText(`🧩 填料总含量:${Object.values(fillerAmounts).reduce((a,b)=>a+b,0)}`, 14, 46);
+        ctx.fillText(`🐟 动物总数:${Object.values(animalAmounts).reduce((a,b)=>a+b,0)}`, 14, 68);
+    }
+    
+    // roundRect 辅助
+    if (!CanvasRenderingContext2D.prototype.roundRect) {
+        CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+            if (w < 2 * r) r = w / 2;
+            if (h < 2 * r) r = h / 2;
+            this.moveTo(x+r, y);
+            this.lineTo(x+w-r, y);
+            this.quadraticCurveTo(x+w, y, x+w, y+r);
+            this.lineTo(x+w, y+h-r);
+            this.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
+            this.lineTo(x+r, y+h);
+            this.quadraticCurveTo(x, y+h, x, y+h-r);
+            this.lineTo(x, y+r);
+            this.quadraticCurveTo(x, y, x+r, y);
+            return this;
+        };
+    }
+    
+    // 构建右侧面板
+    function buildOptionPanels() {
+        plantsData.forEach(p => {
+            let div = document.createElement('div'); div.className = 'item-row';
+            div.innerHTML = `
+                <div class="item-info">${p.name} <span class="item-desc">${p.desc}</span></div>
+                <div class="item-control">
+                    <label>含量:</label>
+                    <input type="range" min="0" max="5" step="1" value="0" class="amount-slider" data-id="${p.id}">
+                    <span class="amount-value" id="plantVal_${p.id}">0</span>
+                    <input type="checkbox" class="enable-check" data-id="${p.id}"> 启用
+                </div>
+            `;
+            plantContainer.appendChild(div);
+            const slider = div.querySelector('.amount-slider');
+            const span = div.querySelector('.amount-value');
+            const chk = div.querySelector('.enable-check');
+            const update = () => {
+                if(chk.checked) { plantAmounts[p.id] = parseInt(slider.value); span.innerText = plantAmounts[p.id]; }
+                else { plantAmounts[p.id] = 0; slider.value = 0; span.innerText = 0; }
+                regenerateRandomPositions();
+                drawFloatingBed();
+            };
+            slider.addEventListener('input', update);
+            chk.addEventListener('change', update);
+            if(p.id === '美人蕉') { chk.checked = true; slider.value = 2; plantAmounts[p.id]=2; span.innerText=2; }
+            else if(p.id === '菖蒲') { chk.checked = true; slider.value = 1; plantAmounts[p.id]=1; span.innerText=1; }
+            else { chk.checked = false; plantAmounts[p.id]=0; slider.value=0; span.innerText=0; }
         });
-        if (pendingCount === 0 && incorrect.length === 0) {
-            showPondTip("✅ 验证通过！所有组分都正确归类，生态构建完整。");
+        fillersData.forEach(f => {
+            let div = document.createElement('div'); div.className = 'item-row';
+            div.innerHTML = `
+                <div class="item-info">${f.name} <span class="item-desc">${f.desc}</span></div>
+                <div class="item-control">
+                    <label>含量:</label>
+                    <input type="range" min="0" max="5" step="1" value="0" class="amount-slider" data-id="${f.id}">
+                    <span class="amount-value" id="fillerVal_${f.id}">0</span>
+                    <input type="checkbox" class="enable-check" data-id="${f.id}"> 启用
+                </div>
+            `;
+            fillerContainer.appendChild(div);
+            const slider = div.querySelector('.amount-slider');
+            const span = div.querySelector('.amount-value');
+            const chk = div.querySelector('.enable-check');
+            const update = () => {
+                if(chk.checked) { fillerAmounts[f.id] = parseInt(slider.value); span.innerText = fillerAmounts[f.id]; }
+                else { fillerAmounts[f.id] = 0; slider.value = 0; span.innerText = 0; }
+                regenerateRandomPositions();
+                drawFloatingBed();
+            };
+            slider.addEventListener('input', update);
+            chk.addEventListener('change', update);
+            if(f.id === '碳素纤维生态草') { chk.checked = true; slider.value = 2; fillerAmounts[f.id]=2; span.innerText=2; }
+        });
+        animalsData.forEach(a => {
+            let div = document.createElement('div'); div.className = 'item-row';
+            div.innerHTML = `
+                <div class="item-info">${a.name} <span class="item-desc">${a.desc}</span></div>
+                <div class="item-control">
+                    <label>含量:</label>
+                    <input type="range" min="0" max="5" step="1" value="0" class="amount-slider" data-id="${a.id}">
+                    <span class="amount-value" id="animalVal_${a.id}">0</span>
+                    <input type="checkbox" class="enable-check" data-id="${a.id}"> 启用
+                </div>
+            `;
+            animalContainer.appendChild(div);
+            const slider = div.querySelector('.amount-slider');
+            const span = div.querySelector('.amount-value');
+            const chk = div.querySelector('.enable-check');
+            const update = () => {
+                if(chk.checked) { animalAmounts[a.id] = parseInt(slider.value); span.innerText = animalAmounts[a.id]; }
+                else { animalAmounts[a.id] = 0; slider.value = 0; span.innerText = 0; }
+                regenerateRandomPositions();
+                drawFloatingBed();
+            };
+            slider.addEventListener('input', update);
+            chk.addEventListener('change', update);
+            if(a.id === '黄金螺') { chk.checked = true; slider.value = 1; animalAmounts[a.id]=1; span.innerText=1; }
+        });
+    }
+    
+    function bindSlidersAndUI() {
+        sedimentSlider.addEventListener('input', () => { sedimentValSpan.innerText = sedimentSlider.value; regenerateRandomPositions(); drawFloatingBed(); });
+        const updateWaterLabels = () => {
+            phValSpan.innerText = phInput.value; doValSpan.innerText = doInput.value; tempValSpan.innerText = tempInput.value;
+            nh4ValSpan.innerText = nh4Input.value; tnValSpan.innerText = tnInput.value; tpValSpan.innerText = tpInput.value;
+        };
+        phInput.addEventListener('input', updateWaterLabels); doInput.addEventListener('input', updateWaterLabels); tempInput.addEventListener('input', updateWaterLabels);
+        nh4Input.addEventListener('input', updateWaterLabels); tnInput.addEventListener('input', updateWaterLabels); tpInput.addEventListener('input', updateWaterLabels);
+        updateWaterLabels();
+    }
+    
+    // ----- 净化模型 (严格遵循速率排序与时间增强) -----
+    function getBasePlantRate(name) { return plantsData.find(p=>p.id===name)?.baseEffect || 0.02; }
+    function getFillerBaseRate(name) { return fillersData.find(f=>f.id===name)?.baseEffect || 0.022; }
+    function getAnimalBaseRate(name) { return animalsData.find(a=>a.id===name)?.baseEffect || 0.017; }
+    
+    // 动态速率: 填料随时间增强
+    function getTotalRate(pollutantType, day) {
+        let plantTotal = 0;
+        for(let [name, amt] of Object.entries(plantAmounts)) plantTotal += getBasePlantRate(name) * amt;
+        let fillerTotal = 0;
+        for(let [name, amt] of Object.entries(fillerAmounts)) {
+            let base = getFillerBaseRate(name);
+            let timeFactor = 1 + Math.min(0.22, day * 0.0075);
+            fillerTotal += base * amt * timeFactor;
+        }
+        let animalTotal = 0;
+        for(let [name, amt] of Object.entries(animalAmounts)) animalTotal += getAnimalBaseRate(name) * amt;
+        let sedimentFactor = 1 - (parseFloat(sedimentSlider.value)/100) * 0.32;
+        let pHval = parseFloat(phInput.value);
+        let pHfactor = 1.0;
+        if(pHval > 9) pHfactor = Math.max(0.3, 1 - (pHval - 9) * 0.7);
+        else if(pHval > 7.5) pHfactor = Math.max(0.85, 1 - (pHval - 7.5) * 0.15);
+        else if(pHval < 6.5) pHfactor = 0.85;
+        
+        let tempVal = parseFloat(tempInput.value);
+        let tempFactor = 1.0;
+        if(tempVal > 30) tempFactor = Math.max(0.4, 1 - (tempVal - 30) * 0.2);
+        else if(tempVal < 15) tempFactor = 0.8 + (tempVal - 10) * 0.04;
+        
+        let doVal = parseFloat(doInput.value);
+        let doFactor = 1.0;
+        if(pollutantType === 'NH4') {
+            doFactor = Math.min(1.3, 0.7 + doVal * 0.06);
         } else {
-            let message = `❌ 发现 ${incorrect.length} 处错误：\n` + incorrect.join("\n");
-            if (message.length > 300) message = message.substring(0, 300) + "…";
-            showPondTip(message);
+            doFactor = Math.max(0.7, 1.2 - doVal * 0.05);
         }
+        
+        let typeFactor = (pollutantType === 'NH4') ? 1.2 : (pollutantType === 'TP') ? 1.15 : 1.0;
+        let baseK = 0.016 + (plantTotal + fillerTotal + animalTotal) * 0.012;
+        let finalK = baseK * typeFactor * sedimentFactor * pHfactor * tempFactor * doFactor;
+        return Math.min(Math.max(finalK, 0.008), 0.27);
     }
     
-    function initPondEcosystem() {
-        componentStatus = pondComponents.map(c => ({ name: c.name, category: c.category, currentZone: "pending" }));
-        selectedComponentIndex = null;
-        renderPond();
-        attachZoneEvents();
-        const resetBtn = document.getElementById("resetClassificationBtn");
-        if (resetBtn) {
-            const newReset = resetBtn.cloneNode(true);
-            resetBtn.parentNode.replaceChild(newReset, resetBtn);
-            newReset.addEventListener("click", resetAllClassification);
+    function simulatePollutantDynamic(initC, days, pollutant) {
+        let results = [initC];
+        let c = initC;
+        for(let t=1; t<=30; t++) {
+            let k = getTotalRate(pollutant, t-1);
+            c = c * Math.exp(-k);
+            results.push(parseFloat(c.toFixed(3)));
         }
-        // 绑定验证按钮事件
-        const verifyBtn = document.getElementById("verifyClassificationBtn");
-        if (verifyBtn) {
-            const newVerify = verifyBtn.cloneNode(true);
-            verifyBtn.parentNode.replaceChild(newVerify, verifyBtn);
-            newVerify.addEventListener("click", verifyClassification);
-        }
-    }
-    function attachZoneEvents() {
-        const zones = document.querySelectorAll(".zone-card");
-        zones.forEach(zone => {
-            const newZone = zone.cloneNode(true);
-            zone.parentNode.replaceChild(newZone, zone);
-            const zoneType = newZone.getAttribute("data-zone-type");
-            newZone.addEventListener("click", (e) => { if(!e.target.closest(".remove-btn")) attemptMoveToZone(zoneType); });
-        });
+        return results;
     }
     
-    // 启动第一部分所有动态初始化
-    function initFirstPart() {
-        initVocabCards();
-        initDropSlots();
-        initDescriptionCards();
-        initRoleDropZones();
-        resetAllSlots(); // 初始清空所有槽
+    function simulateDOcurve(initDO, days, sedimentPct, pHval) {
+        let plantTot = Object.values(plantAmounts).reduce((a,b)=>a+b,0);
+        let fillerTot = Object.values(fillerAmounts).reduce((a,b)=>a+b,0);
+        let animalTot = Object.values(animalAmounts).reduce((a,b)=>a+b,0);
+        let inc = (plantTot*0.18 + fillerTot*0.13 + animalTot*0.11) - sedimentPct*0.55;
+        if(pHval>8) inc*=0.75;
+        inc = Math.min(Math.max(inc, 0.1), 3.0);
+        let sat = Math.min(initDO + inc, 8.5);
+        return days.map(t => parseFloat((sat - (sat - initDO) * Math.exp(-0.11 * t)).toFixed(2)));
     }
-    initFirstPart();
+    // 图表
+    let charts = {};
+    function initCharts() {
+        const days = Array.from({length:31}, (_,i)=>i);
+        charts.NH4 = new Chart(document.getElementById('chartNH4'), { type: 'line', data: { labels: days, datasets: [{ label: '氨氮 (mg/L)', data: [], borderColor: '#e67e22' }] }, options: { responsive: true } });
+        charts.TN = new Chart(document.getElementById('chartTN'), { type: 'line', data: { labels: days, datasets: [{ label: '总氮 (mg/L)', data: [], borderColor: '#2c6e9e' }] } });
+        charts.TP = new Chart(document.getElementById('chartTP'), { type: 'line', data: { labels: days, datasets: [{ label: '总磷 (mg/L)', data: [], borderColor: '#d45d5d' }] } });
+        charts.DO = new Chart(document.getElementById('chartDO'), { type: 'line', data: { labels: days, datasets: [{ label: 'DO (mg/L)', data: [], borderColor: '#2c9e6e' }] } });
+    }
+    function updateAllCharts(nh4, tn, tp, doArr) {
+        charts.NH4.data.datasets[0].data = nh4; charts.TN.data.datasets[0].data = tn; charts.TP.data.datasets[0].data = tp;
+        charts.DO.data.datasets[0].data = doArr;
+        charts.NH4.update(); charts.TN.update(); charts.TP.update(); charts.DO.update();
+    }
+    
+    function runSimulation() {
+        let initNH4 = parseFloat(nh4Input.value), initTN = parseFloat(tnInput.value), initTP = parseFloat(tpInput.value);
+        let initDO = parseFloat(doInput.value), initPH = parseFloat(phInput.value), initTemp = parseFloat(tempInput.value);
+        
+        if(initTN < initNH4) {
+            initTN = initNH4 + 1;
+            tnInput.value = initTN.toFixed(1);
+            tnValSpan.innerText = initTN.toFixed(1);
+        }
+        
+        let days = Array.from({length:31}, (_,i)=>i);
+        let nh4Data = simulatePollutantDynamic(initNH4, days, 'NH4');
+        let tnData = simulatePollutantDynamic(initTN, days, 'TN');
+        let tpData = simulatePollutantDynamic(initTP, days, 'TP');
+        let doData = simulateDOcurve(initDO, days, parseFloat(sedimentSlider.value)/100, initPH);
+        updateAllCharts(nh4Data, tnData, tpData, doData);
+        let removalNH4 = ((initNH4 - nh4Data[30])/initNH4*100).toFixed(1);
+        let removalTN = ((initTN - tnData[30])/initTN*100).toFixed(1);
+        let removalTP = ((initTP - tpData[30])/initTP*100).toFixed(1);
+        
+        let warningMsg = '';
+        if(initPH > 9) warningMsg += ' ⚠️pH过高抑制净化';
+        if(initTemp > 30) warningMsg += ' ⚠️温度过高抑制净化';
+        document.getElementById('simNote').innerHTML = `📊 模拟完成 | 氨氮去除率 ${removalNH4}% | 总氮去除率 ${removalTN}% | 总磷去除率 ${removalTP}% | pH=${initPH} 温度=${initTemp}℃${warningMsg}`;
+    }
+    
+    // 初始化
+    buildOptionPanels();
+    bindSlidersAndUI();
+    initCharts();
+    regenerateRandomPositions();
+    drawFloatingBed();
+    runSimulation();
+    runBtn.addEventListener('click', () => { runSimulation(); drawFloatingBed(); });
+    // 确保每次底泥/组分变动时重绘并重新生成位置（已在回调中调用regenerate）
 </script>
 </body>
 </html>
